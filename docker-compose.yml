@@ -1,0 +1,39 @@
+# 一键上云：docker compose up -d
+# 组成：app（应用本体）+ caddy（反向代理 + 自动 HTTPS 证书）
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    volumes:
+      # 持久化 SQLite 数据库文件和上传的图片（容器重建数据不丢）
+      - app-data:/app/server/prisma
+      - app-uploads:/app/server/uploads
+    environment:
+      - JWT_SECRET=请改成随机长字符串
+      - CORS_ORIGIN=https://你的域名.com
+      # AI 供应商（二选一或都配，AI_PROVIDER=auto 默认优先 DeepSeek）
+      - AI_PROVIDER=auto
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      # 联网搜索（可选）
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+      - BOCHA_API_KEY=${BOCHA_API_KEY:-}
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy-data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  app-uploads:
+  caddy-data:

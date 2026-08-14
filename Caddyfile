@@ -1,0 +1,5 @@
+# Caddy：把 80/443 流量反代给应用容器。
+# 把「你的域名.com」换成真实域名（DNS 解析到服务器 IP），Caddy 会自动申请并续期 HTTPS 证书。
+你的域名.com {
+    reverse_proxy app:4000
+}

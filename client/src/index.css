@@ -1,0 +1,100 @@
+@import "tailwindcss";
+/* highlight.js 代码高亮主题（配合 rehype-highlight 使用） */
+@import "highlight.js/styles/github-dark.css";
+
+/* ---------- Markdown 渲染样式（AI 回复 / 系统总结用 react-markdown 渲染） ---------- */
+.md-content {
+  line-height: 1.65;
+  word-break: break-word;
+}
+.md-content > *:first-child {
+  margin-top: 0;
+}
+.md-content > *:last-child {
+  margin-bottom: 0;
+}
+.md-content p {
+  margin: 0.4em 0;
+}
+.md-content h1,
+.md-content h2,
+.md-content h3,
+.md-content h4 {
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+}
+.md-content h1 { font-size: 1.2em; }
+.md-content h2 { font-size: 1.1em; }
+.md-content h3 { font-size: 1.05em; }
+.md-content ul,
+.md-content ol {
+  margin: 0.4em 0;
+  padding-left: 1.4em;
+}
+.md-content ul { list-style: disc; }
+.md-content ol { list-style: decimal; }
+.md-content code {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+  font-size: 0.9em;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+.md-content pre {
+  background: #0d1117;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.md-content pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.88em;
+}
+.md-content blockquote {
+  border-left: 3px solid rgba(255, 255, 255, 0.2);
+  padding-left: 0.8em;
+  margin: 0.5em 0;
+  opacity: 0.85;
+}
+.md-content table {
+  border-collapse: collapse;
+  margin: 0.5em 0;
+  font-size: 0.9em;
+}
+.md-content th,
+.md-content td {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 0.3em 0.6em;
+}
+.md-content a {
+  color: #818cf8;
+  text-decoration: underline;
+}
+
+/* ---------- 自定义滚动条 ---------- */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- AI 流式输出时的打字光标 ---------- */
+.typing-cursor::after {
+  content: "▍";
+  animation: blink 1s step-start infinite;
+  color: #818cf8;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}

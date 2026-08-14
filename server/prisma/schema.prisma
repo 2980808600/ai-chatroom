@@ -1,0 +1,127 @@
+// Prisma 数据模型
+// 想切 PostgreSQL？只需把 provider 改成 "postgresql"、改 DATABASE_URL，其余代码零改动。
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  avatarColor  String   @default("#6366f1")
+  // 角色：USER = 普通用户（AI 有每日配额）；MEMBER = 会员（AI 不限量）；ADMIN = 管理员
+  role         String   @default("USER")
+  // 封禁：登录和 socket 握手都会被拦截
+  banned       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  rooms           Room[]
+  messages        Message[]
+  sentDms         DirectMessage[] @relation("DmSender")
+  receivedDms     DirectMessage[] @relation("DmRecipient")
+  aiConversations AiConversation[]
+  aiRequests      AiRequestLog[]
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String   @default("")
+  createdAt   DateTime @default(now())
+
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  messages    Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  // TEXT = 普通消息；AI = 群聊机器人回复；SYSTEM = 系统消息（如 AI 总结）；IMAGE = 图片（content 存图片 URL）
+  type      String   @default("TEXT")
+  createdAt DateTime @default(now())
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, createdAt])
+}
+
+// 一对一私聊消息
+model DirectMessage {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   @default("TEXT") // TEXT | IMAGE
+  createdAt DateTime @default(now())
+  readAt    DateTime? // 对方打开会话时写入
+
+  senderId    String
+  sender      User     @relation("DmSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("DmRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@index([senderId, recipientId, createdAt])
+  @@index([recipientId, readAt])
+}
+
+model AiConversation {
+  id        String   @id @default(cuid())
+  title     String   @default("新对话")
+  // GENERAL = 通用问答；DEBUG = 代码排错
+  mode      String   @default("GENERAL")
+  createdAt DateTime @default(now())
+
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AiMessage[]
+}
+
+model AiMessage {
+  id        String   @id @default(cuid())
+  role      String // user | assistant
+  content   String
+  createdAt DateTime @default(now())
+
+  conversationId String
+  conversation   AiConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+}
+
+// 每次 AI 请求的记账记录：管理后台成本报表的数据来源
+model AiRequestLog {
+  id           String   @id @default(cuid())
+  provider     String // deepseek | anthropic
+  scope        String // chat | room | summarize
+  status       String // OK | ERROR | REFUSED
+  inputTokens  Int?
+  outputTokens Int?
+  createdAt    DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+// 审计日志：登录成败、注册、管理操作留痕
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // login_success | login_failed | register | room_create | role_change | user_ban | room_delete
+  detail    String   @default("")
+  ip        String   @default("")
+  actorId   String?
+  targetId  String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
